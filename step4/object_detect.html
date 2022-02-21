@@ -1,0 +1,40 @@
+<html>
+<body>
+<div class="text"><input type="text" name="text" id="text"></div>
+<div id="result"></div>
+
+</body>
+
+<script>
+
+var text = document.getElementById("text");
+var result = document.getElementById("result");
+const apiurl = 'https://o2j2zl56zg.execute-api.us-west-2.amazonaws.com/dev/hello/';
+
+//画像を0.4倍のスケールで表示する
+
+const testTheAPI = (e) => {
+  console.log(e.target.value);
+  var textData = e.target.value;
+
+  // APIリクエストの送信
+  var xhttpreq = new XMLHttpRequest();
+  xhttpreq.open("POST", apiurl, true);
+  xhttpreq.setRequestHeader('Content-type', 'text/html');
+  xhttpreq.send(textData);
+
+  // APIレスポンスが届いたらHTMLを更新
+  xhttpreq.onreadystatechange = () => {
+    if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
+      const res = xhttpreq.response
+      result.innerText = res;
+    }
+  };
+}
+
+text.addEventListener('change', testTheAPI, false);
+
+</script>
+
+</html>
+
