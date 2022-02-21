@@ -1,6 +1,6 @@
 # Step 4 & 5
 
-4. POSTリクエストを受け取れるように`template.yaml`とLambdaを書き換える
+### 4. POSTリクエストを受け取れるように`template.yaml`とLambdaを書き換える
 
 HTMLファイルからテキストデータをPOSTしたときに、それを`Hello, xxx!`と表示できることをまずは目指しましょう。
 
@@ -8,6 +8,6 @@ HTMLファイルからテキストデータをPOSTしたときに、それを`He
 
 (Hint 1: まずは「AWS SAM template docs」で検索）
 
-5. HTML/JavaScriptからPOSTリクエストを送って挙動を確認する
+### 5. HTML/JavaScriptからPOSTリクエストを送って挙動を確認する
 
 これは`object_detect.html`のAPI URLを置き換えるだけで大丈夫です。

@@ -1,0 +1,126 @@
+<html>
+<body>
+<div class="upload"><input type="file" name="file" id="file"></div>
+<div class="text"><input type="text" name="text" id="text"></div>
+<div id="result"></div>
+
+<canvas id="canvas">
+画像を表示するには、canvasタグをサポートしたブラウザが必要です。
+</canvas>
+
+</body>
+
+<script>
+
+var text = document.getElementById("text");
+var file = document.getElementById("file");
+var result = document.getElementById("result");
+const apiurl = 'https://o2j2zl56zg.execute-api.us-west-2.amazonaws.com/dev/hello/';
+
+//画像を0.4倍のスケールで表示する
+var image_ratio = 0.4
+
+const testTheAPI = (e) => {
+  console.log(e.target.value);
+  var textData = e.target.value;
+
+  // APIリクエストの送信
+  var xhttpreq = new XMLHttpRequest();
+  xhttpreq.open("POST", apiurl, true);
+  xhttpreq.setRequestHeader('Content-type', 'text/html');
+  xhttpreq.send(textData);
+
+  // APIレスポンスが届いたらHTMLを更新
+  xhttpreq.onreadystatechange = () => {
+    if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
+      const res = xhttpreq.response
+      result.innerText = res;
+    }
+  };
+}
+
+const testImage = (e) => {
+  // ファイル情報を取得
+  var fileData = e.target.files[0];
+
+  // 画像ファイル以外は処理を止める
+  if(!fileData.type.match('image.*')) {
+      alert('画像を選択してください');
+      return;
+  }
+
+  // FileReaderオブジェクトを使ってファイル読み込み
+  var reader = new FileReader();
+  var xhttpreq = new XMLHttpRequest();
+
+  reader.readAsDataURL(fileData);
+
+  //画像の読み込みが終わったら表示する
+  reader.onloadend = () => {
+    var img = document.createElement('img');
+    img.src = reader.result;
+    result.appendChild(img);
+    if (img.width < 400){
+      image_ratio =1;
+    }
+    img.width = img.width*image_ratio;
+    // APIリクエストを送る
+    const base64Image = reader.result.split(',')[1]
+    xhttpreq.open("POST", apiurl, true);
+    xhttpreq.setRequestHeader('Content-type', 'image/jpeg');
+    // xhttpreq.send({ base64Image });
+    xhttpreq.send(base64Image);
+  }
+  
+  //200を受け取ったら処理を開始する
+  xhttpreq.onreadystatechange = () => {
+    if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
+      result.innerHTML ="";
+      //結果のjsonファイルをパースする
+      const res = JSON.parse(xhttpreq.response);
+      
+      //画像表示領域canvasに画像を表示する
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+      var image = new Image();
+      image.src = reader.result;
+      canvas.width = image.width;
+      canvas.height = image.height;
+      var aspect = image.width/image.height;
+      context.drawImage(image, 0, 0, image.width, image.height, 0, 0, image.width*image_ratio,image.height*image_ratio);
+
+      context.strokeStyle="#FF0000";
+      context.font = "20px 'Arial'";
+      context.fillStyle = '#FF0000'
+      //レスポンスから配列を抽出
+      people = res.Persons;
+      console.log(people);
+      for (var i = 0; i < people.length; i++ ){
+        const person = people[i];
+        for (var j = 0; j < person.BodyParts.length; j++) {
+          const bodyPart = person.BodyParts[j];
+          if (bodyPart.EquipmentDetections.length > 0) {
+            const confidence = bodyPart.Confidence.toPrecision(4);
+            const text = `ID: ${person.Id} (${confidence})`;
+            const bbox = bodyPart.EquipmentDetections[0].BoundingBox;
+            const x = bbox['Left'] * image_ratio * image.width;
+            const y = bbox['Top'] * image_ratio * image.height;
+            const across_x = bbox['Width'] * image_ratio * image.width;
+            const across_y = bbox['Height'] * image_ratio * image.height;
+
+            context.fillText(text, x, y);
+            context.strokeRect(x, y, across_x, across_y);
+          }
+        }
+      }
+    }
+  };
+}
+
+text.addEventListener('change', testTheAPI, false);
+file.addEventListener('change', testImage, false);
+
+</script>
+
+</html>
+
